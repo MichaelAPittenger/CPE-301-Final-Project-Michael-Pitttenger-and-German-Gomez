@@ -37,6 +37,8 @@ void loop() {
 
 //vent position adjustable in all states except for Error
 
+//functions
+
 //Disabled
   //fan off
   //yellow LED ON
@@ -62,3 +64,7 @@ void loop() {
 //Error
   //display error message: "Water level is too low"
   //red LED ON
+
+//display temp and humidity
+
+  
