@@ -25,6 +25,11 @@ volatile unsigned char *myTIMSK1  = (unsigned char *) 0x6F;
 volatile unsigned char *myTIFR1   = (unsigned char *) 0x36;
 volatile unsigned int  *myTCNT1   = (unsigned  int *) 0x84;
 
+int waterThresh;
+int waterLevel;
+int tempThresh;
+int temp;
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -32,6 +37,16 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  if(waterLevel < waterThresh){
+    error();
+  }
+  if(temp > tempThresh){
+    isRunning();
+  }
+  else{
+    idle();
+  }
 
 }
 
@@ -44,6 +59,10 @@ void loop() {
   //yellow LED ON
   //start --> Idle
 
+void disabled(){
+  
+}
+
 //Idle
   //fan off
   //green LED ON
@@ -51,6 +70,10 @@ void loop() {
   //stop --> Disabled
   //temp > threshold --> Running
   //water level =< threshold --> Error
+
+void idle(){
+  
+}
 
 //Running
   //on entry: start fan motor
@@ -61,10 +84,22 @@ void loop() {
   //stop --> Disabled
   //water level < threshold --> Error
 
+void isRunning(){
+  
+}
+
 //Error
   //display error message: "Water level is too low"
   //red LED ON
 
+void error(){
+  
+}
+
 //display temp and humidity
+
+void displayLCD(){
+  
+}
 
   
