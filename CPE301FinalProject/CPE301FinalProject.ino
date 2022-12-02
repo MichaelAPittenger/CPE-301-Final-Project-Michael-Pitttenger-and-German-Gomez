@@ -54,13 +54,37 @@ void loop() {
 
 //functions
 
+void fan(_Bool var){
+  if(var == true){
+    //fan on
+  }
+  else{
+    //fan off
+  }
+}
+
+void LED(int var){
+  switch(var){
+    case 1:
+      //turn blue on
+    case 2:
+      //turn red on
+    case 3:
+      //turn yellow on
+    case 4:
+      //turn green on
+    break;
+  }
+}
+
 //Disabled
   //fan off
   //yellow LED ON
   //start --> Idle
 
 void disabled(){
-  
+  fan(false);
+  LED(3);
 }
 
 //Idle
@@ -72,7 +96,9 @@ void disabled(){
   //water level =< threshold --> Error
 
 void idle(){
-  
+  fan(false);
+  displayLCD();
+  LED(4);
 }
 
 //Running
@@ -85,7 +111,8 @@ void idle(){
   //water level < threshold --> Error
 
 void isRunning(){
-  
+  fan(true);
+  LED(1);
 }
 
 //Error
@@ -93,7 +120,7 @@ void isRunning(){
   //red LED ON
 
 void error(){
-  
+  LED(2);
 }
 
 //display temp and humidity
@@ -101,5 +128,7 @@ void error(){
 void displayLCD(){
   
 }
+
+
 
   
