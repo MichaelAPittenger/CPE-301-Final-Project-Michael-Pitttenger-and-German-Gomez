@@ -53,10 +53,7 @@ void loop()
     }
   }
 
-  //toggle on/off (idle/disabled)
-  onoff(counter);
-
-  //if idle --> check levels
+  //check on/off, then check levels
   if(counter%2==0)
   {
     //check levels
@@ -70,35 +67,15 @@ void loop()
       idle();
     }
   }
-
-//check levels
-    if (waterLevel < waterThresh) {
-      error();
-    }
-    if (temp > tempThresh) {
-      isRunning();
-    }
-    else {
-      idle();
-    }
-}
-
-//vent position adjustable in all states except for Error
-
-//functions
-
-//alternates between turning on and off
-void onoff(int counter)
-{
-  if(counter%2==0)
-  {
-    idle();
-  }
   else
   {
     disabled();
   }
 }
+
+//vent position adjustable in all states except for Error
+
+//functions
 
 //display temp and humidity
 
