@@ -33,6 +33,7 @@ volatile unsigned int  *myTCNT1   = (unsigned  int *) 0x84;
 
 byte in_char;
 
+//initializing functions, would not run otherwise
 int waterThresh;
 int waterLevel;
 int tempThresh;
@@ -63,8 +64,8 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
 
+//reads serial input like stop and start
 //  if (kbhit())
 //  {
 //    // read the character
@@ -76,6 +77,7 @@ void loop() {
 //      disabled();
 //    }
 
+//check levels
     if (waterLevel < waterThresh) {
       error();
     }
