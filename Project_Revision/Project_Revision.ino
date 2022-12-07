@@ -47,11 +47,11 @@ void loop()
     // if it's the quit character
     if(in_char == 'stop'||in_char == 'STOP')
     {
-      //disable
+      disabled();
     }
     if(in_char == 'start'||in_char == 'START')
     {
-      //idle
+      idle();
     }
   }
 
