@@ -22,6 +22,7 @@ int waterThresh;
 int waterLevel;
 int tempThresh;
 int temp;
+int counter;
 
 //initialize functions
 
@@ -33,6 +34,7 @@ void setup()
   *portB &= 0xBF;
   // Start the UART
   U0Init(9600);
+  counter = 0;
 }
 
 void loop() 
@@ -44,13 +46,27 @@ void loop()
     in_char = getChar();
     // echo it back
     putChar(in_char);
-    // if it's the quit character
-    if(in_char == 'stop'||in_char == 'STOP')
+    // 's' toggles between on/off
+    if(in_char == 's'||in_char == 'S')
     {
-      disabled();
+      counter++;
     }
-    if(in_char == 'start'||in_char == 'START')
-    {
+  }
+
+  //toggle on/off (idle/disabled)
+  onoff(counter);
+
+  //if idle --> check levels
+  if(counter%2==0)
+  {
+    //check levels
+    if (waterLevel < waterThresh) {
+      error();
+    }
+    if (temp > tempThresh) {
+      isRunning();
+    }
+    else {
       idle();
     }
   }
@@ -71,6 +87,18 @@ void loop()
 
 //functions
 
+//alternates between turning on and off
+void onoff(int counter)
+{
+  if(counter%2==0)
+  {
+    idle();
+  }
+  else
+  {
+    disabled();
+  }
+}
 
 //display temp and humidity
 
