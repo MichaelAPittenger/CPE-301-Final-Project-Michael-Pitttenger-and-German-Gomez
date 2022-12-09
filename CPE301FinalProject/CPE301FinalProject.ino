@@ -97,9 +97,15 @@ void loop() {
 
 
 //display temp and humidity
+#include <LiquidCrystal.h>
+const int rs = 44, en = 45, d4 = 46, d5 = 47, d6 = 48, d7 = 49;
 
 void displayLCD() {
-
+  LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+  lcd.begin(16, 2);
+  lcd.print("First line");
+  lcd.setCursor(0,1);
+  lcd.print("Second line");
 }
 
 void fan(_Bool var) {
