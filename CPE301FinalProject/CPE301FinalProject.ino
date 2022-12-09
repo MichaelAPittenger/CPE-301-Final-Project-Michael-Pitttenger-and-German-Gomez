@@ -103,9 +103,9 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 void displayLCD(String air, String humidity) {
   lcd.begin(16, 2);
-  lcd.print("Air Temp = " + humidity);
+  lcd.print("Air Temp = " + humidity + " F");
   lcd.setCursor(0,1);
-  lcd.print("Humidity = " + air);
+  lcd.print("Humidity = " + air + " F");
 }
 
 void fan(_Bool var) {
