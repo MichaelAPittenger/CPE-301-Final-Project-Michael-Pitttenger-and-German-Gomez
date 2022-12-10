@@ -101,11 +101,11 @@ void loop() {
 const int rs = 44, en = 45, d4 = 46, d5 = 47, d6 = 48, d7 = 49;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
-void displayLCD(String air, String humidity) {
+void displayLCD(String firstLine, String secondLine) {
   lcd.begin(16, 2);
-  lcd.print("Air Temp = " + humidity + " F");
+  lcd.print(firstLine);
   lcd.setCursor(0,1);
-  lcd.print("Humidity = " + air + " F");
+  lcd.print(secondLine);
 }
 
 void fan(_Bool var) {
