@@ -90,7 +90,7 @@ void loop()
     disabled();
   }
   
-  delay(200);
+  delay(50);
 }
 
 //vent position adjustable in all states except for Error
@@ -121,19 +121,19 @@ void ventAngle(int dir){
         *portC |= 0b00000001;
         Serial.write("up");
         Serial.print('\n');
-        delay(50);
+        delay(5);
       case 1:
         *portC &= 0xF0;
         *portC |= 0b00000010;
-        delay(50);
+        delay(5);
       case 2:
         *portC &= 0xF0;
         *portC |= 0b00000100;
-        delay(50);
+        delay(5);
       case 3:
         *portC &= 0xF0;
         *portC |= 0b00001000;
-        delay(50);
+        delay(5);
       break;
     }
   }
@@ -144,19 +144,19 @@ void ventAngle(int dir){
         *portC |= 0b00001000;
         Serial.write("down");
         Serial.print('\n');
-        delay(50);
+        delay(5);
       case 1:
         *portC &= 0xF0;
         *portC |= 0b00000100;
-        delay(50);
+        delay(5);
       case 2:
         *portC &= 0xF0;
         *portC |= 0b00000010;
-        delay(50);
+        delay(5);
       case 3:
         *portC &= 0xF0;
         *portC |= 0b00000001;
-        delay(50);
+        delay(5);
         break;
     }
   }
