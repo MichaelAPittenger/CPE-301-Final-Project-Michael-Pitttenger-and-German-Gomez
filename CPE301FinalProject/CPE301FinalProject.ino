@@ -98,7 +98,7 @@ void loop() {
 
 //display temp and humidity
 #include <LiquidCrystal.h>
-const int rs = 44, en = 45, d4 = 46, d5 = 47, d6 = 48, d7 = 49;
+const int rs = 48, en = 49, d4 = 46, d5 = 47, d6 = 44, d7 = 45;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 void displayLCD(String firstLine, String secondLine) {
