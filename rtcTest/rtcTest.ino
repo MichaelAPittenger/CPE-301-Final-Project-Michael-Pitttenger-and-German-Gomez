@@ -1,6 +1,5 @@
 #define RDA 0x80
 #define TBE 0x20
-#include <LiquidCrystal.h>
 #include <DHT.h>
 #include <RTClib.h>
 
@@ -28,17 +27,27 @@ volatile unsigned int* my_ADC_DATA = (unsigned int*) 0x78;
 byte in_char;
 int waterThresh = 100;
 int tempThresh;
-int temp;
+float temp;
+float humi;
 int counter = 0;
 int stepNumber = 0;
 
 //initialize functions
 
-DHT dht(2,DHT11);
+DHT dht;
 RTC_DS1307 rtc;
 
 void setup() 
 {     
+  // SETUP RTC MODULE
+  Serial.begin(9600);
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    Serial.flush();
+    while (1);
+  }
+  // automatically sets the RTC to the date & time on PC this sketch was compiled
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   //set PB4 to input
   *portDDRB &= 0b00001111;           
   // set the rest to output
@@ -51,12 +60,21 @@ void setup()
   // setup the ADC
   adc_init();
   counter = 0;
-  Serial.begin(9600);
+  dht.setup(2); // data pin 2
+  Serial.println("Humidity (%)\tTemperature (F)");
 }
 
 void loop() 
 {
-
+  delay(dht.getMinimumSamplingPeriod());
+  
+  humi = dht.getHumidity();
+  temp = dht.getTemperature();
+  temp = dht.toFahrenheit(temp);
+   
+  Serial.print(humi, 1);
+  Serial.print("\t\t");
+  Serial.print(temp, 1);
   // get the reading from the ADC
   unsigned int waterLevel = adc_read(0);
   // print it to the serial port
@@ -67,6 +85,7 @@ void loop()
   print_int(potentiometer);
 
   ventAngle(potentiometer);
+
 
   //check on/off, then check levels
   if(*portB & 0x10)
@@ -96,7 +115,6 @@ void loop()
     disabled();
   }
   
-  delay(50);
 }
 
 //vent position adjustable in all states except for Error
@@ -104,9 +122,15 @@ void loop()
 //functions
 
 //display temp and humidity
+#include <LiquidCrystal.h>
+const int rs = 48, en = 49, d4 = 46, d5 = 47, d6 = 44, d7 = 45;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
-void displayLCD() {
-
+void displayLCD(String firstLine, String secondLine) {
+  lcd.begin(16, 2);
+  lcd.print(firstLine);
+  lcd.setCursor(0,1);
+  lcd.print(secondLine);
 }
 
 void fan(_Bool var) {
@@ -120,7 +144,7 @@ void fan(_Bool var) {
 
 void ventAngle(int dir){
   int var = 0;
-  if(dir > 400){
+  if(dir > 500){
     switch(var){
       case 0:
         *portC &= 0xF0;
@@ -143,7 +167,7 @@ void ventAngle(int dir){
       break;
     }
   }
-  else if(dir < 200){
+  else if(dir < 300){
     switch(var){
       case 0:
         *portC &= 0xF0;
@@ -170,6 +194,23 @@ void ventAngle(int dir){
   if(stepNumber > 3){
     stepNumber = 0;
   }
+}
+
+void displayRTC(){
+  DateTime now = rtc.now();
+  Serial.print("Date & Time: ");
+  Serial.print(now.year(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.day(), DEC);
+  Serial.print(" (");
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println(")");
 }
 
 void LED(int var) {
@@ -212,6 +253,10 @@ void LED(int var) {
 void disabled() {
   fan(false);
   LED(1);
+  String tempRead = "Temp: " + String(temp) + " F";
+  String humiRead = "Humi: " + String(humi) + " %";
+  displayLCD(tempRead, humiRead); 
+  displayRTC();
   Serial.write("disabled");
   Serial.print('\n');
 }
@@ -226,7 +271,6 @@ void disabled() {
 
 void idle() {
   fan(false);
-  displayLCD();
   LED(2);
   Serial.write("idle");
   Serial.print('\n');
@@ -244,6 +288,9 @@ void idle() {
 void isRunning() {
   fan(true);
   LED(3);
+//  String tempRead = "Temp: " + String(temp) + " F";
+//  String humiRead = "Humi: " + String(humi) + " %";
+//  displayLCD(tempRead, humiRead); 
   Serial.write("running");
   Serial.print('\n');
 }
@@ -255,6 +302,7 @@ void isRunning() {
 void error()
 {
   LED(4);
+  displayLCD("Error","");
   Serial.write("error");
   Serial.print('\n');
 }

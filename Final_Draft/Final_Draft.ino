@@ -1,6 +1,5 @@
 #define RDA 0x80
 #define TBE 0x20
-#include <LiquidCrystal.h>
 #include <DHT.h>
 #include <RTClib.h>
 
@@ -26,11 +25,14 @@ volatile unsigned int* my_ADC_DATA = (unsigned int*) 0x78;
 
 //variables
 byte in_char;
-int waterThresh = 100;
-int tempThresh;
-int temp;
+int waterThresh = 200;
+int tempThresh = 80;
+float temp;
+float humi;
 int counter = 0;
 int stepNumber = 0;
+int state = 0;
+int lastState = 0;
 
 //initialize functions
 
@@ -39,34 +41,43 @@ RTC_DS1307 rtc;
 
 void setup() 
 {     
+  // SETUP RTC MODULE
+  if (! rtc.begin()) {
+//    Serial.println("Couldn't find RTC");
+//    Serial.flush();
+    while (1);
+  }
+  dht.begin();
+  // automatically sets the RTC to the date & time on PC this sketch was compiled
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   //set PB4 to input
-  *portDDRB &= 0b00001111;           
+  *portDDRB &= 0b00101111;           
   // set the rest to output
-  *portDDRB |= 0b00001111;
+  *portDDRB |= 0b00101111;
   *portDDRC |= 0xFF;
   // set all to LOW
-  *portB &= 0x00;
+  *portB &= 0xFF;
   // Start the UART
   U0Init(9600);
   // setup the ADC
   adc_init();
   counter = 0;
-  Serial.begin(9600);
 }
 
 void loop() 
 {
-
+  delay(1000);
+  
+  humi = dht.readHumidity();
+  temp = dht.readTemperature(true);
+   
   // get the reading from the ADC
   unsigned int waterLevel = adc_read(0);
-  // print it to the serial port
-  print_int(waterLevel);
   // get the reading from the ADC
   unsigned int potentiometer = adc_read(1);
-  // print it to the serial port
-  print_int(potentiometer);
 
   ventAngle(potentiometer);
+
 
   //check on/off, then check levels
   if(*portB & 0x10)
@@ -76,8 +87,6 @@ void loop()
 
   if(counter%2 != 0)
   {
-    Serial.print(counter);
-    Serial.print('\n');
     //check levels
     if (waterLevel < waterThresh) {
       error();
@@ -91,12 +100,14 @@ void loop()
   }
   else
   {
-    Serial.print(counter);
-    Serial.print('\n');
     disabled();
   }
+
+  if(lastState != state){
+    displayRTC();
+  }
+  lastState = state;
   
-  delay(50);
 }
 
 //vent position adjustable in all states except for Error
@@ -104,102 +115,130 @@ void loop()
 //functions
 
 //display temp and humidity
+#include <LiquidCrystal.h>
+const int rs = 48, en = 49, d4 = 46, d5 = 47, d6 = 44, d7 = 45;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
-void displayLCD() {
-
-}
-
-void fan(_Bool var) {
-  if (var == true) {
-    //fan on
-  }
-  else {
-    //fan off
-  }
+void displayLCD(String firstLine, String secondLine) {
+  lcd.begin(16, 2);
+  lcd.print(firstLine);
+  lcd.setCursor(0,1);
+  lcd.print(secondLine);
 }
 
 void ventAngle(int dir){
   int var = 0;
-  if(dir > 400){
-    switch(var){
-      case 0:
-        *portC &= 0xF0;
-        *portC |= 0b00000001;
-        Serial.write("up");
-        Serial.print('\n');
-        delay(5);
-      case 1:
-        *portC &= 0xF0;
-        *portC |= 0b00000010;
-        delay(5);
-      case 2:
-        *portC &= 0xF0;
-        *portC |= 0b00000100;
-        delay(5);
-      case 3:
-        *portC &= 0xF0;
-        *portC |= 0b00001000;
-        delay(5);
-      break;
-    }
-  }
-  else if(dir < 200){
-    switch(var){
-      case 0:
-        *portC &= 0xF0;
-        *portC |= 0b00001000;
-        Serial.write("down");
-        Serial.print('\n');
-        delay(5);
-      case 1:
-        *portC &= 0xF0;
-        *portC |= 0b00000100;
-        delay(5);
-      case 2:
-        *portC &= 0xF0;
-        *portC |= 0b00000010;
-        delay(5);
-      case 3:
-        *portC &= 0xF0;
-        *portC |= 0b00000001;
-        delay(5);
+  for(int i=0;i<30;i++){
+    if(dir > 600){
+      switch(var){
+        case 0:
+          *portC &= 0xF0;
+          *portC |= 0b00000001;
+          delay(5);
+        case 1:
+          *portC &= 0xF0;
+          *portC |= 0b00000010;
+          delay(5);
+        case 2:
+          *portC &= 0xF0;
+          *portC |= 0b00000100;
+          delay(5);
+        case 3:
+          *portC &= 0xF0;
+          *portC |= 0b00001000;
+          delay(5);
         break;
+      }
+    }
+    else if(dir < 200){
+      switch(var){
+        case 0:
+          *portC &= 0xF0;
+          *portC |= 0b00001000;
+          delay(5);
+        case 1:
+          *portC &= 0xF0;
+          *portC |= 0b00000100;
+          delay(5);
+        case 2:
+          *portC &= 0xF0;
+          *portC |= 0b00000010;
+          delay(5);
+        case 3:
+          *portC &= 0xF0;
+          *portC |= 0b00000001;
+          delay(5);
+          break;
+      }
+    }
+    stepNumber++;
+    if(stepNumber > 3){
+      stepNumber = 0;
     }
   }
-  stepNumber++;
-  if(stepNumber > 3){
-    stepNumber = 0;
+}
+
+void displayRTC(){
+  DateTime now = rtc.now();
+  putChar('T');
+  putChar('I');
+  putChar('M');
+  putChar('E');
+  putChar(':');
+
+  unsigned int year = (now.year());
+  print_int(year);
+  putChar('M');
+  putChar(':');
+  unsigned int month = (now.month());
+  print_int(month);
+  putChar('D');
+  putChar(':');
+  unsigned int day = (now.day());
+  print_int(day);
+  putChar('H');
+  putChar(':');
+  unsigned int hour = (now.hour());
+  print_int(hour);
+  putChar('M');
+  putChar('i');
+  putChar('n');
+  putChar(':');
+  unsigned int minute = (now.minute());
+  print_int(minute);
+  putChar('S');
+  putChar(':');
+  unsigned int second = (now.second());
+  print_int(second);
+}
+
+void fan(_Bool var) {
+  *portB &= 0xDF;
+  if (var == true) {
+    *portB |= 0b00100000;
   }
 }
 
 void LED(int var) {
 
-  *portB &= 0x0F;
+  *portB &= 0x2F;
   
   switch (var) {
     case 1:
     //turn yellow on
       *portB |= 0b00000001;
-      Serial.write("yellow");
-      Serial.print('\n');
      break;
     case 2:
     //turn green on
       *portB |= 0b00000010;
-      Serial.write("green");
-      Serial.print('\n');
      break;
     case 3:
      //turn blue on
       *portB |= 0b00000100;
-      Serial.write("blue");
-      Serial.print('\n');
      break;
     case 4:
      //turn red on
       *portB |= 0b00001000;
-      Serial.write("red");
-      Serial.print('\n');
       break;
   }
 }
@@ -210,10 +249,12 @@ void LED(int var) {
 //start --> Idle
 
 void disabled() {
+  state = 1;
   fan(false);
   LED(1);
-  Serial.write("disabled");
-  Serial.print('\n');
+  String tempRead = "Temp: " + String(temp) + " F";
+  String humiRead = "Humi: " + String(humi) + " %";
+  displayLCD(tempRead, humiRead); 
 }
 
 //Idle
@@ -225,11 +266,12 @@ void disabled() {
 //water level =< threshold --> Error
 
 void idle() {
+  state = 2;
   fan(false);
-  displayLCD();
   LED(2);
-  Serial.write("idle");
-  Serial.print('\n');
+  String tempRead = "Temp: " + String(temp) + " F";
+  String humiRead = "Humi: " + String(humi) + " %";
+  displayLCD(tempRead, humiRead); 
 }
 
 //Running
@@ -242,21 +284,22 @@ void idle() {
 //water level < threshold --> Error
 
 void isRunning() {
+  state = 3;
   fan(true);
   LED(3);
-  Serial.write("running");
-  Serial.print('\n');
+  String tempRead = "Temp: " + String(temp) + " F";
+  String humiRead = "Humi: " + String(humi) + " %";
+  displayLCD(tempRead, humiRead); 
 }
 
 //Error
 //display error message: "Water level is too low"
 //red LED ON
 
-void error()
-{
+void error(){
+  state = 4;
   LED(4);
-  Serial.write("error");
-  Serial.print('\n');
+  displayLCD("Error","");
 }
 
 /*
